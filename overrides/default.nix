@@ -1111,9 +1111,7 @@ lib.composeManyExtensions [
         }
       );
 
-      llama-cpp-python = (super.llama-cpp-python.override {
-        preferWheel = true;
-      }).overridePythonAttrs (
+      llama-cpp-python = super.llama-cpp-python.overridePythonAttrs (
         old: {
           propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [
             self.setuptools
