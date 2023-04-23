@@ -239,6 +239,12 @@ lib.composeManyExtensions [
         }
       );
 
+      bitsandbytes = super.bitsandbytes.overridePythonAttrs (
+        old: {
+          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
+        }
+      );
+
       cairocffi = super.cairocffi.overridePythonAttrs (
         old: {
           inherit (pkgs.python3.pkgs.cairocffi) patches;
@@ -304,6 +310,19 @@ lib.composeManyExtensions [
             }
           )
         );
+
+      ${if super ? cmake then "cmake" else null} = super.cmake.overridePythonAttrs (
+        old: {
+          cmakeFlags = [
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.10"
+          ];
+          preBuild = ''
+            cd ..
+          '';
+          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.cmake pkg-config ];
+          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools self.scikit-build ];
+        }
+      );
 
       cmdstanpy = super.cmdstanpy.overridePythonAttrs (
         old: {
@@ -648,6 +667,12 @@ lib.composeManyExtensions [
       fastparquet = super.fastparquet.overridePythonAttrs (
         old: {
           buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+        }
+      );
+
+      ffmpy = super.ffmpy.overridePythonAttrs (
+        old: {
+          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
         }
       );
 
@@ -1082,6 +1107,22 @@ lib.composeManyExtensions [
           dontUseCmakeConfigure = true;
           postConfigure = ''
             export HOME=$(mktemp -d)
+          '';
+        }
+      );
+
+      llama-cpp-python = (super.llama-cpp-python.override {
+        preferWheel = true;
+      }).overridePythonAttrs (
+        old: {
+          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [
+            self.setuptools
+            self.scikit-build
+            self.accelerate
+          ];
+          nativeBuildInputs = [ pkgs.cmake ] ++ (old.nativeBuildInputs or [ ]);
+          preBuild = ''
+            cd ..
           '';
         }
       );
@@ -1591,7 +1632,7 @@ lib.composeManyExtensions [
       pandas = super.pandas.overridePythonAttrs (old: {
 
         buildInputs = old.buildInputs or [ ] ++ lib.optional stdenv.isDarwin pkgs.libcxx;
-
+        propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.versioneer ];
         # Doesn't work with -Werror,-Wunused-command-line-argument
         # https://github.com/NixOS/nixpkgs/issues/39687
         hardeningDisable = lib.optional stdenv.cc.isClang "strictoverflow";
@@ -1797,6 +1838,7 @@ lib.composeManyExtensions [
                 nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
                   pkg-config
                   pkgs.cmake
+                  _arrow-cpp
                 ];
 
                 preBuild = ''
