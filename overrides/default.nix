@@ -317,7 +317,7 @@ lib.composeManyExtensions [
             "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.10"
           ];
           preBuild = ''
-            cd ..
+            cd "$OLDPWD"
           '';
           nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.cmake pkg-config ];
           propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools self.scikit-build ];
@@ -1120,9 +1120,12 @@ lib.composeManyExtensions [
             self.scikit-build
             self.accelerate
           ];
+          buildInputs = with pkgs; lib.optionals stdenv.isDarwin [
+            darwin.apple_sdk.frameworks.Accelerate
+          ];
           nativeBuildInputs = [ pkgs.cmake ] ++ (old.nativeBuildInputs or [ ]);
           preBuild = ''
-            cd ..
+            cd "$OLDPWD"
           '';
         }
       );
@@ -1608,7 +1611,7 @@ lib.composeManyExtensions [
             lib.warn "Unknown orjson version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
         in
-        super.orjson.overridePythonAttrs (old: {
+        super.orjson.overridePythonAttrs (old: if old.src.isWheel or false then {} else {
           cargoDeps = pkgs.rustPlatform.fetchCargoTarball {
             inherit (old) src;
             name = "${old.pname}-${old.version}";
@@ -1689,6 +1692,12 @@ lib.composeManyExtensions [
           propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
             ++ lib.optional withPostgres self.psycopg2
             ++ lib.optional withMysql self.mysql-connector;
+        }
+      );
+
+      peft = super.peft.overridePythonAttrs (
+        old: {
+          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
         }
       );
 
