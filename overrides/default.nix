@@ -1608,7 +1608,7 @@ lib.composeManyExtensions [
             lib.warn "Unknown orjson version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
         in
-        super.orjson.overridePythonAttrs (old: if old.src.isWheel or false then {} else {
+        super.orjson.overridePythonAttrs (old: if old.src.isWheel or false then { } else {
           cargoDeps = pkgs.rustPlatform.fetchCargoTarball {
             inherit (old) src;
             name = "${old.pname}-${old.version}";
