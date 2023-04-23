@@ -1844,6 +1844,9 @@ lib.composeManyExtensions [
                 nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
                   pkg-config
                   pkgs.cmake
+                ];
+
+                buildInputs = (old.buildInputs or [ ]) ++ [
                   _arrow-cpp
                 ];
 
