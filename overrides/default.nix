@@ -311,18 +311,18 @@ lib.composeManyExtensions [
           )
         );
 
-      ${if super ? cmake then "cmake" else null} = super.cmake.overridePythonAttrs (
-        old: {
-          cmakeFlags = [
-            "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.10"
-          ];
-          preBuild = ''
-            cd "$OLDPWD"
-          '';
-          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.cmake pkg-config ];
-          propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools self.scikit-build ];
-        }
-      );
+      # ${if super ? cmake && super.cmake.stdenv.isDarwin then "cmake" else null} = super.cmake.overridePythonAttrs (
+      #    old: {
+      #     cmakeFlags = [
+      #       "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.10"
+      #     ];
+      #     preBuild = ''
+      #       cd "$OLDPWD"
+      #     '';
+      #     nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.cmake pkg-config ];
+      #     propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools self.scikit-build ];
+      #   }
+      # );
 
       cmdstanpy = super.cmdstanpy.overridePythonAttrs (
         old: {
@@ -2349,6 +2349,14 @@ lib.composeManyExtensions [
           # Link include and share so it can be used by packages that use pybind11 through cmake
           postInstall = ''
             ln -s $out/${self.python.sitePackages}/pybind11/{include,share} $out/
+          '';
+
+          postBuild = ''
+            set -x
+          '';
+
+          preInstall = ''
+            set -x
           '';
         }
       );
