@@ -16868,6 +16868,7 @@
   ],
   "sqlalchemy": [
     "cython",
+    "greenlet",
     "setuptools"
   ],
   "sqlalchemy-aio": [
