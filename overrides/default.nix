@@ -1760,7 +1760,7 @@ lib.composeManyExtensions [
         postFixup = ''
           rm -r $out/${self.python.sitePackages}/nvidia/{__pycache__,__init__.py}
         '';
-      };
+      });
 
       # The following are dependencies of torch >= 2.0.0.
       # torch doesn't officially support system CUDA, unless you build it yourself.
