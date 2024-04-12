@@ -3836,9 +3836,26 @@ lib.composeManyExtensions [
       pydantic = super.pydantic.overridePythonAttrs
         (old: { buildInputs = old.buildInputs or [ ] ++ [ pkgs.libxcrypt ]; });
 
-      vllm = super.vllm.overridePythonAttrs (attrs: {
+      vllm = super.vllm.overridePythonAttrs (old: {
         autoPatchelfIgnoreMissingDeps = true;
-      });
+      } // (lib.optionalAttrs (!old.src.isWheel or false) rec {
+        CUDA_HOME = pkgs.symlinkJoin {
+          name = "vllm-cuda-home";
+          paths = [
+            pkgs.cudaPackages.libcusparse
+            pkgs.cudaPackages.libnvjitlink
+            pkgs.cudaPackages.libcublas
+            pkgs.cudaPackages.libcusolver
+            pkgs.cudaPackages.cuda_nvcc
+            pkgs.cudaPackages.cuda_cccl
+            pkgs.cudaPackages.cuda_cudart
+          ];
+        };
+        nativeBuildInputs = old.nativeBuildInputs ++ [
+          pkgs.which
+        ];
+        LD_LIBRARY_PATH = "${CUDA_HOME}/lib";
+      }));
 
       xformers = super.xformers.overridePythonAttrs (attrs: {
         autoPatchelfIgnoreMissingDeps = true;
