@@ -3537,6 +3537,7 @@ lib.composeManyExtensions [
 
         propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [
           final.numpy
+          final.packaging
         ];
       });
 
