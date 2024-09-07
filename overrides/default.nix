@@ -614,6 +614,7 @@ lib.composeManyExtensions [
             "42.0.7" = "sha256-wAup/0sI8gYVsxr/vtcA+tNkBT8wxmp68FPbOuro1E4=";
             "42.0.8" = "sha256-PgxPcFocEhnQyrsNtCN8YHiMptBmk1PUhEDQFdUR1nU=";
             "43.0.0" = "sha256-TEQy8PrIaZshiBFTqR/OJp3e/bVM1USjcmpDYcjPJPM=";
+            "43.0.1" = "sha256-wiAHM0ucR1X7GunZX8V0Jk2Hsi+dVdGgDKqcYjSdD7Q=";
           }.${version} or (
             lib.warn "Unknown cryptography version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
@@ -684,6 +685,15 @@ lib.composeManyExtensions [
       darts = prev.darts.override {
         preferWheel = true;
       };
+
+      dask = prev.dask.overridePythonAttrs (
+        old: {
+          # dask 2024.8.2 depends on dask-expr 1.1.13, which depends on dask, resulting in infinite recursion
+          propagatedBuildInputs = removePackagesByName
+            (old.propagatedBuildInputs or [ ])
+            (lib.optionals (final ? dask-expr) [ final.dask-expr ]);
+        }
+      );
 
       datadog-lambda = prev.datadog-lambda.overridePythonAttrs (old: {
         postPatch = ''
@@ -935,7 +945,7 @@ lib.composeManyExtensions [
 
       gdal = prev.gdal.overridePythonAttrs (
         old: {
-          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ gdal ];
+          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ gdal final.numpy ];
           preBuild = (old.preBuild or "") + ''
             substituteInPlace setup.cfg \
               --replace "../../apps/gdal-config" '${gdal}/bin/gdal-config'
@@ -1646,6 +1656,11 @@ lib.composeManyExtensions [
           '';
         }
       );
+
+      msgspec = prev.msgspec.overridePythonAttrs (old: {
+        # crash during integer serialization - see https://github.com/jcrist/msgspec/issues/730
+        hardeningDisable = old.hardeningDisable or [ ] ++ [ "fortify" ];
+      });
 
       munch = prev.munch.overridePythonAttrs (
         old: {
