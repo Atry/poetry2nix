@@ -686,6 +686,15 @@ lib.composeManyExtensions [
         preferWheel = true;
       };
 
+      dask = prev.dask.overridePythonAttrs (
+        old: {
+          # dask 2024.8.2 depends on dask-expr 1.1.13, which depends on dask, resulting in infinite recursion
+          propagatedBuildInputs = removePackagesByName
+            (old.propagatedBuildInputs or [ ])
+            (lib.optionals (final ? dask-expr) [ final.dask-expr ]);
+        }
+      );
+
       datadog-lambda = prev.datadog-lambda.overridePythonAttrs (old: {
         postPatch = ''
           substituteInPlace setup.py --replace "setuptools==" "setuptools>="
@@ -1650,7 +1659,7 @@ lib.composeManyExtensions [
 
       msgspec = prev.msgspec.overridePythonAttrs (old: {
         # crash during integer serialization - see https://github.com/jcrist/msgspec/issues/730
-        hardeningDisable = old.hardeningDisable or [] ++ [ "fortify" ];
+        hardeningDisable = old.hardeningDisable or [ ] ++ [ "fortify" ];
       });
 
       munch = prev.munch.overridePythonAttrs (
